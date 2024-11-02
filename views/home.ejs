@@ -9,18 +9,23 @@
 <body>
     <%- include('./partials/nav') %>
         <div class="container mt-3">
-            <% blogs.forEach(blog=> { %>
-                <div class="card" style="width: 18rem;">
-                    <img class="card-img-top" src="<%= blog.coverImageURL %>" alt="Card image cap">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <%=blog.title%> 
-                        </h5>
-                        <a href="/blog/<%= blog._id %>" class="btn btn-primary">View</a>
-                    </div>
-                </div>
+            <div class="row"> <!-- Move the row class here -->
+                <% blogs.forEach(blog=> { %>
+                    <div class="col-md-3 mb-4"> <!-- Four columns per row -->
+                        <div class="card"> <!-- No need for "col" class here -->
+                            <img class="card-img-top" src="<%= blog.coverImageURL %>" alt="Card image cap">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <%= blog.title %>
+                                </h5>
+                                <a href="/blog/<%= blog._id %>" class="btn btn-primary">View</a>
 
-                <% }) %>
+
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
         </div>
         <%- include('./partials/script') %>
 </body>

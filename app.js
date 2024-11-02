@@ -1,22 +1,24 @@
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
+
 const blog = require("./models/blog");
 
 const userRouter = require("./router/user");
 const blogRouter = require("./router/blog");
 
-const app = express();
-const PORT = 3000;
-
 const {
   checkForAuthenticationCookie,
 } = require("./middlewares/authentication");
 
+const app = express();
+const PORT = process.env.PORT ;
+
 mongoose
-  .connect("mongodb://localhost:27017/Yashify")
-  .then(() => console.log("Connected to MongoDB"));
+  .connect(process.env.MONGO_URL)
+  .then((e) => console.log("Connected to MongoDB"));
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve("./views"));
