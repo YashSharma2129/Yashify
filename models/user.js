@@ -57,7 +57,8 @@ UserSchema.static(
 
     if (!user) throw new Error("User not found");
 
-    const salt = user.salt;
+    const salt = user.salt; 
+
     const hashedPassword = user.password;
 
     const hashedGivenPassword = createHmac("sha256", salt)

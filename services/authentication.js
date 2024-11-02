@@ -11,11 +11,8 @@ function createTokenForUser(user) {
     role: user.role,
   };
 
-  const token = JWT.sign(payload, secret); // Move this outside of the nested function
-  console.log("Payload:", payload);
-  console.log("Generated token inside function:", token);
-
-  return token; // Ensure the token is returned
+  const token = JWT.sign(payload, secret); 
+  return token; 
 }
 
 function validateToken(token) {
