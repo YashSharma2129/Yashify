@@ -31,12 +31,9 @@ app.use(express.static(path.resolve("./public")));
 
 app.get("/", async (req, res) => {
  
-  let username = "";
-  if (req.user) {
-    username = req.user.FullName;
-  }
+
   const allBlogs = await blog.find({}).sort({ createdAt: -1 });
-  res.render("home", { user: username, blogs: allBlogs });
+  res.render("home", { user: req.user, blogs: allBlogs });
 });
 
 app.use("/user", userRouter);
