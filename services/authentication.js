@@ -5,14 +5,15 @@ const secret = "$Yash";
 
 function createTokenForUser(user) {
   const payload = {
+    FullName: user.FullName,
     _id: user._id,
     email: user.email,
     profileImageURL: user.profileImageURL,
     role: user.role,
   };
 
-  const token = JWT.sign(payload, secret); 
-  return token; 
+  const token = JWT.sign(payload, secret);
+  return token;
 }
 
 function validateToken(token) {

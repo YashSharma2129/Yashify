@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
@@ -14,7 +15,7 @@ const {
 } = require("./middlewares/authentication");
 
 const app = express();
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT;
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -29,8 +30,13 @@ app.use(checkForAuthenticationCookie("token"));
 app.use(express.static(path.resolve("./public")));
 
 app.get("/", async (req, res) => {
+ 
+  let username = "";
+  if (req.user) {
+    username = req.user.FullName;
+  }
   const allBlogs = await blog.find({}).sort({ createdAt: -1 });
-  res.render("home", { user: req.user, blogs: allBlogs });
+  res.render("home", { user: username, blogs: allBlogs });
 });
 
 app.use("/user", userRouter);
