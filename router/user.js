@@ -36,4 +36,6 @@ router.get("/logout", async (req, res) => {
   res.clearCookie("token").redirect("/");
 });
 
+
+
 module.exports = router;

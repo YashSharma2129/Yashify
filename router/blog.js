@@ -30,8 +30,7 @@ router.get("/:id", async (req, res) => {
   const comments = await Comment.find({ blogID: req.params.id }).populate(
     "createdBy"
   );
-  console.log("blog", blog);
-  console.log("comments", comments);
+
   return res.render("blog", {
     user: req.user,
     blog,
@@ -58,6 +57,35 @@ router.post("/comment/:blogID", async (req, res) => {
     createdBy: req.user._id,
   });
   return res.redirect(`/blog/${req.params.blogID}`);
+});
+// In your router file (e.g., blog.js or routes/blog.js)
+
+router.post("/blog/comments/:commentId/replies", async (req, res) => {
+  const { commentId } = req.params;
+  const { content } = req.body;
+
+  if (!req.user) {
+    return res.redirect("/login"); // Ensure the user is logged in
+  }
+
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).send("Comment not found.");
+    }
+
+    // Add the reply to the comment
+    comment.replies.push({
+      content,
+      createdBy: req.user._id,
+    });
+
+    await comment.save();
+    res.redirect(`/blog/${comment.blogId}`); // Redirect back to the blog post
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error.");
+  }
 });
 
 module.exports = router;

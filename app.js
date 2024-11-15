@@ -28,10 +28,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(checkForAuthenticationCookie("token"));
 app.use(express.static(path.resolve("./public")));
+app.use(express.json()); 
 
 app.get("/", async (req, res) => {
- 
-
   const allBlogs = await blog.find({}).sort({ createdAt: -1 });
   res.render("home", { user: req.user, blogs: allBlogs });
 });
