@@ -3,88 +3,84 @@ const multer = require("multer");
 const path = require("path");
 const Blog = require("../models/blog");
 const Comment = require("../models/comment");
+const { checkForAuthenticationCookie } = require("../middlewares/authentication");
 
 const router = Router();
 
-router.get("/add-new", (req, res) => {
-  return res.render("addBlog", {
-    user: req.user,
-  });
-});
-
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    return cb(null, path.resolve(`./public/uploads`));
+  destination: (req, file, cb) => {
+    cb(null, path.resolve("./public/uploads"));
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const filename = `${Date.now()}-${file.originalname}`;
-
-    return cb(null, filename);
-  },
+    cb(null, filename);
+  }
 });
 
 const upload = multer({ storage });
 
-router.get("/:id", async (req, res) => {
-  const blog = await Blog.findById(req.params.id).populate("createdBy");
-  const comments = await Comment.find({ blogID: req.params.id }).populate(
-    "createdBy"
-  );
+router.get("/add-new", (req, res) => {
+  res.render("addBlog", { user: req.user });
+});
 
-  return res.render("blog", {
-    user: req.user,
-    blog,
-    comments,
-  });
+router.get("/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id).populate("createdBy");
+    const comments = await Comment.find({ blogID: req.params.id })
+      .populate("createdBy")
+      .populate({
+        path: "replies.createdBy",
+        model: "User"
+      });
+
+    res.render("blog", { user: req.user, blog, comments });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
+  }
 });
 
 router.post("/", upload.single("coverImage"), async (req, res) => {
   const { title, body } = req.body;
   const blog = await Blog.create({
-    body,
     title,
+    body,
     createdBy: req.user._id,
-    coverImageURL: `/uploads/${req.file.filename}`,
+    coverImageURL: `/uploads/${req.file.filename}`
   });
 
-  return res.redirect(`/blog/${blog._id}`);
+  res.redirect(`/blog/${blog._id}`);
 });
 
 router.post("/comment/:blogID", async (req, res) => {
   await Comment.create({
     content: req.body.content,
     blogID: req.params.blogID,
-    createdBy: req.user._id,
+    createdBy: req.user._id
   });
-  return res.redirect(`/blog/${req.params.blogID}`);
+
+  res.redirect(`/blog/${req.params.blogID}`);
 });
-// In your router file (e.g., blog.js or routes/blog.js)
 
-router.post("/blog/comments/:commentId/replies", async (req, res) => {
-  const { commentId } = req.params;
-  const { content } = req.body;
-
-  if (!req.user) {
-    return res.redirect("/login"); // Ensure the user is logged in
-  }
-
+router.post("/comments/:id/replies", async (req, res) => {
   try {
-    const comment = await Comment.findById(commentId);
-    if (!comment) {
-      return res.status(404).send("Comment not found.");
-    }
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).send("Comment not found");
 
-    // Add the reply to the comment
-    comment.replies.push({
-      content,
-      createdBy: req.user._id,
-    });
+    if (!req.user) return res.status(401).send("Unauthorized");
 
+    const reply = {
+      content: req.body.content,
+      createdBy: req.user._id
+    };
+
+    comment.replies.push(reply);
     await comment.save();
-    res.redirect(`/blog/${comment.blogId}`); // Redirect back to the blog post
+
+    res.redirect(`/blog/${comment.blogID}`);
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server error.");
+    res.status(500).send("Server Error");
   }
 });
 

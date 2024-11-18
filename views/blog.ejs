@@ -10,97 +10,166 @@
 
 <body>
     <%- include('./partials/nav') %>
+
         <div class="container mt-4">
+            <!-- Blog Post Content -->
             <div class="blog-post">
                 <h1>
                     <%= blog.title %>
                 </h1>
-                <img src="<%- blog.coverImageURL %>" width="700" alt="Cover image for <%= blog.title %>">
+                <img src="<%- blog.coverImageURL %>" class="img-fluid" alt="Cover image for <%= blog.title %>">
                 <pre class="mt-3"><%- blog.body %></pre>
             </div>
-            <div class="container mt-4">
+
+            <!-- Author Info -->
+            <div class="container mt-4 d-flex align-items-center">
                 <img src="<%- blog.createdBy.profileImageURL %>" width="50"
-                    alt="<%= blog.createdBy.FullName %>'s profile image" />
-                <span>
+                    alt="<%= blog.createdBy.FullName %>'s profile image" class="rounded-circle">
+                <span class="ms-2">
                     <%= blog.createdBy.FullName %>
                 </span>
             </div>
-            <div class="container mt-3">
-                <h1>Comments(<%= comments.length %>)</h1>
+
+            <!-- Rating Section -->
+            <div class="container mt-4">
+                <h3>Rate this Post</h3>
+                <!-- Rating Form -->
+                <form action="/api/rating/rate-post" method="POST" id="ratingForm" class="d-flex align-items-center">
+                    <input type="hidden" name="postId" value="<%= blog._id %>" />
+
+                    <!-- Star Rating UI -->
+                    <div class="me-3">
+                        <label for="rating" class="form-label"></label>
+                        <div id="star-rating" class="star-rating">
+                            <!-- 5 stars for rating -->
+                            <span class="star" data-value="1">&#9733;</span>
+                            <span class="star" data-value="2">&#9733;</span>
+                            <span class="star" data-value="3">&#9733;</span>
+                            <span class="star" data-value="4">&#9733;</span>
+                            <span class="star" data-value="5">&#9733;</span>
+                        </div>
+                        <input type="hidden" name="rating" id="selected-rating" value="" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Rating</button>
+                </form>
+
+
+            </div>
+
+            <!-- Add some custom CSS and JavaScript -->
+            <style>
+                .star-rating {
+                    font-size: 30px;
+                    color: #ccc;
+                    cursor: pointer;
+                }
+
+                .star-rating .star:hover,
+                .star-rating .star.selected {
+                    color: #f39c12;
+                    /* Yellow for active/selected stars */
+                }
+            </style>
+
+            <script>
+                // Star Rating functionality
+                const stars = document.querySelectorAll('.star');
+                const ratingInput = document.getElementById('selected-rating');
+
+                stars.forEach(star => {
+                    star.addEventListener('click', () => {
+                        const rating = star.getAttribute('data-value');
+                        // Set the selected rating
+                        ratingInput.value = rating;
+
+                        // Remove the 'selected' class from all stars
+                        stars.forEach(star => star.classList.remove('selected'));
+
+                        // Add the 'selected' class to the clicked star and all previous stars
+                        for (let i = 0; i < rating; i++) {
+                            stars[i].classList.add('selected');
+                        }
+                    });
+                });
+            </script>
+
+
+
+            <!-- Comments Section -->
+            <div class="container mt-4">
+                <h3>Comments (<%= comments.length %>)</h3>
+
                 <% if (locals.user) { %>
                     <form action="/blog/comment/<%= blog._id %>" method="post">
                         <div class="mb-3">
                             <input type="text" class="form-control" name="content" placeholder="Enter your comment"
                                 required>
-                            <button class="btn btn-sm btn-primary mt-2" type="submit">Add</button>
+                            <button class="btn btn-sm btn-primary mt-2" type="submit">Add Comment</button>
                         </div>
                     </form>
-                    <div class="mt-3">
-                        <% comments.forEach(comment=> { %>
-                            <div class="comment">
-                                <!-- Comment details -->
-                                <img src="<%- comment.createdBy.profileImageURL %>" width="50"
-                                    alt="<%= comment.createdBy.FullName %>'s profile image" />
-                                <strong>
-                                    <%= comment.createdBy.FullName %>:
-                                </strong>
-                                <pre><%= comment.content %></pre>
-
-                                <button class="btn btn-sm btn-secondary mt-2" id="reply-button-<%= comment._id %>"
-                                    onclick="toggleReplyForm('<%= comment._id %>')">Reply</button>
-
-
-                                <div class="replies mt-3">
-                                    <% comment.replies.forEach(reply=> { %>
-                                        <div class="reply mb-2">
-                                            <img src="<%- reply.createdBy.profileImageURL %>" width="40"
-                                                alt="<%= reply.createdBy.FullName %>'s profile image" />
-                                            <strong>
-                                                <%= reply.createdBy.FullName %>:
-                                            </strong>
-                                            <pre><%= reply.content %></pre>
-                                        </div>
-                                        <% }) %>
-                                </div>
-
-                                <!-- Reply form (hidden by default) -->
-                                <div id="reply-form-<%= comment._id %>" style="display: none;">
-                                    <form action="/blog/comments/<%= comment._id %>/replies" method="post">
-                                        <div class="mb-3">
-                                            <input type="text" class="form-control" name="content"
-                                                placeholder="Reply to this comment" required>
-                                            <button class="btn btn-sm btn-secondary mt-2" type="submit">Add
-                                                Reply</button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                            </div>
-                            <% }) %>
-                    </div>
                     <% } else { %>
-                        <p>Please log in to leave a comment.</p>
+                        <p>Please log in to comment.</p>
                         <% } %>
+
+                            <!-- Display Comments -->
+                            <div class="mt-3">
+                                <% comments.forEach(comment=> { %>
+                                    <div class="comment mb-4">
+                                        <div class="d-flex align-items-center">
+                                            <img src="<%- comment.createdBy?.profileImageURL %>" width="50"
+                                                class="rounded-circle"
+                                                alt="<%= comment.createdBy?.FullName || 'Unknown User' %>'s profile image" />
+                                            <strong class="ms-2">
+                                                <%= comment.createdBy?.FullName || 'Unknown User' %>
+                                            </strong>
+                                        </div>
+                                        <pre><%= comment.content %></pre>
+
+                                        <!-- Reply Button & Reply Form -->
+                                        <% if (user) { %>
+                                            <button class="btn btn-sm btn-outline-secondary mt-2"
+                                                onclick="toggleReplyForm('<%= comment._id %>')">Reply</button>
+                                            <div id="reply-form-<%= comment._id %>" style="display: none;" class="mt-3">
+                                                <form action="/blog/comments/<%= comment._id %>/replies" method="post">
+                                                    <div class="mb-3">
+                                                        <input type="text" class="form-control" name="content"
+                                                            placeholder="Reply to this comment" required>
+                                                        <button class="btn btn-sm btn-secondary mt-2" type="submit">Add
+                                                            Reply</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <% } %>
+
+                                                <!-- Display Replies -->
+                                                <div class="replies mt-3 ms-4">
+                                                    <% comment.replies.forEach(reply=> { %>
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="<%- reply.createdBy?.profileImageURL || 'https://via.placeholder.com/50' %>"
+                                                                width="50" class="rounded-circle"
+                                                                alt="<%= reply.createdBy?.FullName || '' %>'s profile image" />
+                                                            <strong class="ms-2">
+                                                                <%= reply.createdBy?.FullName || '' %>
+                                                            </strong>
+                                                        </div>
+                                                        <pre><%= reply.content %></pre>
+                                                        <% }) %>
+                                                </div>
+                                    </div>
+                                    <% }) %>
+                            </div>
             </div>
         </div>
 
         <%- include('./partials/script') %>
+
             <script>
+                // Toggle visibility of the reply form
                 function toggleReplyForm(commentId) {
                     const replyForm = document.getElementById(`reply-form-${commentId}`);
-                    const replyButton = document.getElementById(`reply-button-${commentId}`);
-
-                    // Toggle the visibility of the reply form
-                    if (replyForm.style.display === "none" || replyForm.style.display === "") {
-                        replyForm.style.display = "block";
-                        replyButton.innerText = "Cancel Reply";  // Change button text
-                    } else {
-                        replyForm.style.display = "none";
-                        replyButton.innerText = "Reply";  // Change back button text
-                    }
+                    replyForm.style.display = replyForm.style.display === 'block' ? 'none' : 'block';
                 }
             </script>
-
 </body>
 
 </html>
